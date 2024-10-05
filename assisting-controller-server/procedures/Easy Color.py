@@ -1,4 +1,3 @@
-from PyQt5.QtGui import QColor
 import time
 import os
 strip_control = None
