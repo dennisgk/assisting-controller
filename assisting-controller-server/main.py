@@ -51,7 +51,7 @@ def get_api_get_extensions():
 
 @app.get("/api/get_procedures", response_class=JSONResponse)
 def get_api_get_procedures():
-    return JSONResponse(content=jsonable_encoder(obj=[SchemaProcedure(name=x.name, info=[f"Description: {x.desc}", f"Domains: {", ".join(x.domains)}"]) for x in glo.procedures]))
+    return JSONResponse(content=jsonable_encoder(obj=[SchemaProcedure(name=x.name, info=[f"Description: {x.desc}", f"Domains: {', '.join(x.domains)}"]) for x in glo.procedures]))
 
 @app.get("/api/get_running", response_class=JSONResponse)
 def get_api_get_running():    
