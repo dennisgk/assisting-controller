@@ -203,17 +203,22 @@ def get_api_delete_extension(name: str):
 
 if __name__ == "__main__":
     if os.name != "nt":
+        ip = "unknown"
+
         try:
             import netifaces as ni
-            ip = ni.ifaddresses('eth0')[ni.AF_INET][0]['addr']
+            ip = ni.ifaddresses("wlan0")[ni.AF_INET][0]["addr"]
+        except e as inst:
+            print(inst)
+            pass
 
+        try:
             from RPLCD.i2c import CharLCD
             lcd = CharLCD(i2c_expander="PCF8574", address=0x27, port=1, cols=16, rows=2, dotsize=8)
             lcd.clear()
 
             lcd.write_string(ip)
-        except e as inst:
-            print(inst)
+        except:
             pass
 
     uvicorn.run(app, host="0.0.0.0", port=80)
