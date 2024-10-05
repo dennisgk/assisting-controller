@@ -212,7 +212,8 @@ if __name__ == "__main__":
             lcd.clear()
 
             lcd.write_string(ip)
-        except:
+        except e as inst:
+            print(inst)
             pass
 
     uvicorn.run(app, host="0.0.0.0", port=80)
