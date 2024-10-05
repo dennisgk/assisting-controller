@@ -60,7 +60,7 @@ def get_api_get_running():
 
 @app.get("/api/get_admin", response_class=JSONResponse)
 def get_api_get_admin():
-    return JSONResponse(content=jsonable_encoder(obj=[SchemaButton(text="Null", on_click_body="alert(\"This button does nothing\");", confirm_nullable=None)]))
+    return JSONResponse(content=jsonable_encoder(obj=[SchemaButton(text="Reboot", on_click_body="async function restart(){await fetch(\"/api/admin_restart\");};window.AC_QUEUE(restart);", confirm_nullable="Are you sure you want to reboot?")]))
 
 @app.get("/api/get_extension_text", response_class=PlainTextResponse)
 def get_api_get_extension_text(name: str):
@@ -123,6 +123,8 @@ def get_api_stop_procedure(name: str):
         print(inst)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
+    return Response(status_code=status.HTTP_200_OK)
+    
 @app.post("/api/edit_procedure", response_class=Response)
 def post_api_edit_procedure(body: SchemaEdit):
     if len([act for act in glo.running_proc if act.proc.name == body.name]) != 0:
@@ -140,6 +142,8 @@ def post_api_edit_procedure(body: SchemaEdit):
     
     delete_procedure(glo, desc[0])
     create_procedure(glo, body.name, body.text)
+    
+    return Response(status_code=status.HTTP_200_OK)
 
 @app.post("/api/edit_extension", response_class=Response)
 def post_api_edit_extension(body: SchemaEdit):
@@ -158,6 +162,8 @@ def post_api_edit_extension(body: SchemaEdit):
     
     delete_extension(glo, desc[0])
     create_extension(glo, body.name, body.text)
+    
+    return Response(status_code=status.HTTP_200_OK)
 
 @app.get("/api/create_procedure", response_class=Response)
 def get_api_create_procedure(name: str):
@@ -167,6 +173,8 @@ def get_api_create_procedure(name: str):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     
     create_procedure(glo, name, None)
+    
+    return Response(status_code=status.HTTP_200_OK)
 
 @app.get("/api/create_extension", response_class=Response)
 def get_api_create_extension(name: str):
@@ -176,6 +184,8 @@ def get_api_create_extension(name: str):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     
     create_extension(glo, name, None)
+    
+    return Response(status_code=status.HTTP_200_OK)
 
 @app.get("/api/delete_procedure", response_class=Response)
 def get_api_delete_procedure(name: str):
@@ -188,6 +198,8 @@ def get_api_delete_procedure(name: str):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     
     delete_procedure(glo, desc[0])
+    
+    return Response(status_code=status.HTTP_200_OK)
 
 @app.get("/api/delete_extension", response_class=Response)
 def get_api_delete_extension(name: str):
@@ -200,6 +212,17 @@ def get_api_delete_extension(name: str):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     
     delete_extension(glo, desc[0])
+    
+    return Response(status_code=status.HTTP_200_OK)
+
+@app.get("/api/admin_restart", response_class=Response)
+def get_api_admin_restart():
+    if os.name == "nt":
+        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
+    
+    os.system("reboot now")
+    
+    return Response(status_code=status.HTTP_200_OK)
 
 if __name__ == "__main__":
     if os.name != "nt":
@@ -208,8 +231,7 @@ if __name__ == "__main__":
         try:
             import netifaces as ni
             ip = ni.ifaddresses("wlan0")[ni.AF_INET][0]["addr"]
-        except e as inst:
-            print(inst)
+        except:
             pass
 
         try:
