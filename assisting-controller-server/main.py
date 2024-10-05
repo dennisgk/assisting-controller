@@ -8,6 +8,7 @@ from lights_global_state import LightsGlobalState
 from schema import SchemaExtension, SchemaButton, SchemaProcedure, SchemaRunning, SchemaStartProcedure, SchemaEdit
 from procedure_handler import start_procedure, stop_procedure, delete_procedure, create_procedure, read_procedure
 from extension_handler import delete_extension, create_extension, read_extension
+import os
 
 app = FastAPI()
 glo = LightsGlobalState()
@@ -51,7 +52,7 @@ def get_api_get_extensions():
 
 @app.get("/api/get_procedures", response_class=JSONResponse)
 def get_api_get_procedures():
-    return JSONResponse(content=jsonable_encoder(obj=[SchemaProcedure(name=x.name, info=[f"Description: {x.desc}", f"Domains: {', '.join(x.domains)}"]) for x in glo.procedures]))
+    return JSONResponse(content=jsonable_encoder(obj=[SchemaProcedure(name=x.name, info=[f"Description: {x.desc}", f"Domains: {", ".join(x.domains)}"]) for x in glo.procedures]))
 
 @app.get("/api/get_running", response_class=JSONResponse)
 def get_api_get_running():    
@@ -201,6 +202,19 @@ def get_api_delete_extension(name: str):
     delete_extension(glo, desc[0])
 
 if __name__ == "__main__":
+    if os.name != "nt":
+        try:
+            import netifaces as ni
+            ip = ni.ifaddresses('eth0')[ni.AF_INET][0]['addr']
+
+            from RPLCD.i2c import CharLCD
+            lcd = CharLCD(i2c_expander="PCF8574", address=0x27, port=1, cols=16, rows=2, dotsize=8)
+            lcd.clear()
+
+            lcd.write_string(ip)
+        except:
+            pass
+
     uvicorn.run(app, host="0.0.0.0", port=80)
     glo.loop.quit()
 
