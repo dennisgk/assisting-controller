@@ -268,7 +268,7 @@ def get_api_admin_logs():
     return PlainTextResponse(content=text)
 
 if __name__ == "__main__":
-    print("Version 1.0.1")
+    print("Version 1.0.2")
 
     if os.name != "nt":
         ip = "unknown"
@@ -290,15 +290,3 @@ if __name__ == "__main__":
 
     uvicorn.run(app, host="0.0.0.0", port=80)
     glo.loop.quit()
-
-"""
-THINGS TO IMPLEMENT:
-actually running on start / loop for basically everything backend / extensions
-implement stop
-implement admin
-implement actual script with openable window
-implement create proc/ex
-implement edit update proc/ex
-implement delete proc/ex
-add a valid text to proc/ex
-"""
