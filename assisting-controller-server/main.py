@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.encoders import jsonable_encoder
 import uvicorn
 import pathlib
+import traceback
 
 import uvicorn.config
 from lights_global_state import LightsGlobalState
@@ -112,6 +113,7 @@ def post_api_start_procedure(body: SchemaStartProcedure):
         start_procedure(glo, desc[0], body.args)
     except Exception as inst:
         print(inst)
+        print(traceback.format_exc())
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return Response(status_code=status.HTTP_200_OK)
@@ -127,6 +129,7 @@ def get_api_stop_procedure(name: str):
         stop_procedure(glo, desc[0])
     except Exception as inst:
         print(inst)
+        print(traceback.format_exc())
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     return Response(status_code=status.HTTP_200_OK)
