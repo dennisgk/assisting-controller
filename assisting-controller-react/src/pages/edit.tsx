@@ -15,6 +15,7 @@ type EditChildProps = {
 
 const EditChild = (props: EditConsumerProps) => {
   const monaco_theme = deps.monaco.use_theme();
+  const api = utils.react.use_context(components.ac.api.Context);
 
   const [saved, set_saved] = utils.react.use_state(true);
   const blocker = deps.router.use_blocker(() => !saved);
@@ -30,11 +31,16 @@ const EditChild = (props: EditConsumerProps) => {
     blocker.reset();
   }, [blocker.state]);
 
+  const on_success = utils.react.use_callback(() => {
+    api.refresh_schema();
+    api.queue(async () => set_saved(true));
+  }, []);
+
   utils.react.use_effect(() => {
     let ev_listener = (ev: KeyboardEvent) => {
       if (ev.ctrlKey && ev.key === "s") {
         ev.preventDefault();
-        props.on_save(() => set_saved(true));
+        props.on_save(on_success);
       }
     };
 
@@ -111,9 +117,7 @@ const EditChild = (props: EditConsumerProps) => {
                           <components.layout.simple_button.SimpleButton
                             ring="HOVER"
                             background="LEVEL"
-                            on_click={() =>
-                              props.on_save(() => set_saved(true))
-                            }
+                            on_click={() => props.on_save(on_success)}
                           >
                             <components.layout.wrapper.Wrapper
                               x_padding="MEDIUM"
