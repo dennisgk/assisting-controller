@@ -12,7 +12,7 @@ const Home = () => {
           v.buttons
         )
       ),
-    [api.schema.running, api.schema.procedures]
+    [api.schema.running, api.schema.procedures, api.gen_output]
   );
 
   return (

@@ -9,7 +9,7 @@ const Proc = () => {
       api.schema.procedures.map((v) =>
         components.ac.api.gen_accordion_procedure(api, v, navigate)
       ),
-    [api.schema.procedures]
+    [api.schema.procedures, api.gen_output]
   );
 
   const schema_extensions = utils.react.use_memo(
@@ -17,7 +17,7 @@ const Proc = () => {
       api.schema.extensions.map((v) =>
         components.ac.api.gen_accordion_extension(api, v, navigate)
       ),
-    [api.schema.extensions]
+    [api.schema.extensions, api.gen_output]
   );
 
   return (

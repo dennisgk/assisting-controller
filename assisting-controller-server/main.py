@@ -4,6 +4,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.encoders import jsonable_encoder
 import uvicorn
 import pathlib
+
+import uvicorn.config
 from lights_global_state import LightsGlobalState
 from schema import SchemaExtension, SchemaButton, SchemaProcedure, SchemaRunning, SchemaStartProcedure, SchemaEdit
 from procedure_handler import start_procedure, stop_procedure, delete_procedure, write_procedure, load_procedure, read_procedure, DEFAULT_PROCEDURE_TEXT
