@@ -272,7 +272,7 @@ def get_api_admin_logs():
     return PlainTextResponse(content=text)
 
 if __name__ == "__main__":
-    print("Version 1.0.0")
+    print("Version 1.0.1")
 
     if os.name != "nt":
         ip = "unknown"
