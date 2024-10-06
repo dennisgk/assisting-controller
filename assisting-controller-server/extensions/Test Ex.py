@@ -9,7 +9,6 @@ def loop(state, set_run):
 def stop(state):
     pass
 
-register_ex("Test Ex")
 register_start(start)
 register_loop(loop)
 register_stop(stop)

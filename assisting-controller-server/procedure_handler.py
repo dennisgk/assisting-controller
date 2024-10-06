@@ -10,9 +10,8 @@ PROC_RUN_QUIT = "PROC_RUN_QUIT"
 PROC_RUN_DOWNTIME = "PROC_RUN_DOWNTIME"
 PROC_RUN_SUSPEND = "PROC_RUN_SUSPEND"
 
-def get_default_procedure_text(name: str):
-    return \
-f"""# set_state AND set_run MUST BE CALLED
+DEFAULT_PROCEDURE_TEXT = \
+"""# set_state AND set_run MUST BE CALLED
 def start(set_state, set_run, register_button, args, ex):
     pass
 
@@ -23,13 +22,12 @@ def loop(state, set_run, ex):
 def stop(state, ex):
     pass
 
-register_procedure("{name}", "DESCRIPTION", ["DOMAIN 1", "DOMAIN 2", "DOMAIN 3..."])
+register_meta("DESCRIPTION", ["DOMAIN 1", "DOMAIN 2", "DOMAIN 3..."])
 register_color_arg("Color", 255, 255, 255)
 register_select_arg("Select", ["Value 1", "Value 2"], "Value 1")
 register_start(start)
 register_loop(loop)
-register_stop(stop)
-"""
+register_stop(stop)"""
 
 class LightsProcedure:
     def __init__(self, name, desc, domains, ex, start_fn, loop_fn, stop_fn, args, link):
@@ -64,8 +62,7 @@ class LightsProcedureBuilder:
         self.stop_fn = None
         self.args = []
 
-    def register_procedure(self, name, desc, domains):
-        self.name = name
+    def register_meta(self, desc, domains):
         self.desc = desc
         self.domains = domains
 
@@ -89,7 +86,9 @@ class LightsProcedureBuilder:
         arg = LightsProcedureSelectArg(type=get_lights_procedure_select_arg_type(), text=arg_name, options=arg_select_options, default=arg_select_def)
         self.args.append(arg)
 
-    def compile(self):
+    def compile(self, name):
+        self.name = name
+
         if self.name == None or self.desc == None or self.domains == None or self.start_fn == None or self.loop_fn == None or self.stop_fn == None:
             raise RuntimeError()
         
@@ -101,7 +100,7 @@ class LightsProcedureBuilder:
 
 def stop_procedure(glo: "LightsGlobalState", act_proc: LightsRunningProcedure):
     glo.loop.remove_where(lambda x: (isinstance(x, LightsProcedureLoopEvent) and x.act_proc == act_proc))
-    act_proc.proc.stop_fn(act_proc.state, get_procedure_extensions(glo, act_proc))
+    act_proc.proc.stop_fn(act_proc.state, get_procedure_extensions(glo, act_proc.proc))
 
     glo.running_proc.remove(act_proc)
     flush_extensions(glo)
@@ -130,8 +129,8 @@ def start_procedure(glo: "LightsGlobalState", proc: LightsProcedure, args: list[
     def proc_set_run(*args):
         proc_run.extend(args)
     
+    proc.start_fn(proc_set_state, proc_set_run, proc_register_button, args, get_procedure_extensions(glo, proc))
     out_proc = LightsRunningProcedure(proc, out_state.var, proc_buttons)
-    proc.start_fn(proc_set_state, proc_set_run, proc_register_button, args, get_procedure_extensions(glo, out_proc))
     glo.running_proc.append(out_proc)
 
     if len(proc_run) > 0:
@@ -151,17 +150,16 @@ def delete_procedure(glo: "LightsGlobalState", proc: LightsProcedure):
 
     pathlib.Path.unlink(proc.link)
 
-def create_procedure(glo: "LightsGlobalState", name: str, text: str | None):
+def write_procedure(name: str, text: str):
     link = pathlib.Path(__file__).parent.joinpath("procedures").joinpath(f"{name}.py")
 
     with open(link, "wb") as stream:
-        if(text == None):
-            text = get_default_procedure_text(name)
-
         stream.write(text.encode("utf-8"))
-    
-    proc = read_procedure(text).build(link)
 
+    return link
+
+def load_procedure(glo: "LightsGlobalState", builder: LightsProcedureBuilder, link: pathlib.Path):
+    proc = builder.build(link)
     glo.procedures.append(proc)
 
 def read_procedure(text: str):
@@ -169,7 +167,7 @@ def read_procedure(text: str):
 
     def scope_exec():
         exec(text, {
-            "register_procedure": builder.register_procedure,
+            "register_meta": builder.register_meta,
             "register_ex": builder.register_ex,
             "register_start": builder.register_start,
             "register_loop": builder.register_loop,
@@ -183,7 +181,7 @@ def read_procedure(text: str):
 
     scope_exec()
 
-    return builder.compile()
+    return builder
 
 def init_procedures() -> list[LightsProcedure]:
     files = pathlib.Path(__file__).parent.joinpath("procedures").glob("*.py")
@@ -198,7 +196,7 @@ def init_procedures() -> list[LightsProcedure]:
             file_text = stream.read()
 
         try:
-            proc = read_procedure(file_text).build(file)
+            proc = read_procedure(file_text).compile(file.stem).build(file)
             out.append(proc)
             print(f"Loaded Procedure: {proc.name}")
         except Exception as e:

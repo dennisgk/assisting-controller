@@ -32,7 +32,7 @@ class LightsGlobalState:
             def proc_set_run(*args):
                 proc_run.extend(args)
 
-            ev.act_proc.proc.loop_fn(ev.act_proc.state, proc_set_run, get_procedure_extensions(self, ev.act_proc))
+            ev.act_proc.proc.loop_fn(ev.act_proc.state, proc_set_run, get_procedure_extensions(self, ev.act_proc.proc))
             
             if len(proc_run) > 0:
                 if(proc_run[0] == PROC_RUN_QUIT):

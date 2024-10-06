@@ -9,7 +9,7 @@ def loop(state, set_run, ex):
 def stop(state, ex):
     pass
 
-register_procedure("Test Proc", "DESCRIPTION", ["DOMAIN 1", "DOMAIN 2", "DOMAIN 3..."])
+register_meta("DESCRIPTION", ["DOMAIN 1", "DOMAIN 2", "DOMAIN 3..."])
 register_ex("Test Ex")
 register_color_arg("Color", 255, 255, 255)
 register_select_arg("Select", ["Value 1", "Value 2"], "Value 1")

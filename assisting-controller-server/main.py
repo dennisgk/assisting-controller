@@ -6,8 +6,8 @@ import uvicorn
 import pathlib
 from lights_global_state import LightsGlobalState
 from schema import SchemaExtension, SchemaButton, SchemaProcedure, SchemaRunning, SchemaStartProcedure, SchemaEdit
-from procedure_handler import start_procedure, stop_procedure, delete_procedure, create_procedure, read_procedure
-from extension_handler import delete_extension, create_extension, read_extension
+from procedure_handler import start_procedure, stop_procedure, delete_procedure, write_procedure, load_procedure, read_procedure, DEFAULT_PROCEDURE_TEXT
+from extension_handler import delete_extension, write_extension, load_extension, read_extension, DEFAULT_EXTENSION_TEXT
 import os
 
 if os.name != "nt":
@@ -138,14 +138,15 @@ def post_api_edit_procedure(body: SchemaEdit):
 
     if len(desc) == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    
+
     try:
-        read_procedure(body.text)
+        builder = read_procedure(body.text).compile(body.name)
     except:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
     
     delete_procedure(glo, desc[0])
-    create_procedure(glo, body.name, body.text)
+    link = write_procedure(builder.name, body.text)
+    load_procedure(glo, builder, link)
     
     return Response(status_code=status.HTTP_200_OK)
 
@@ -160,12 +161,13 @@ def post_api_edit_extension(body: SchemaEdit):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     
     try:
-        read_extension(body.text)
+        builder = read_extension(body.text).compile(body.name)
     except:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
     
     delete_extension(glo, desc[0])
-    create_extension(glo, body.name, body.text)
+    link = write_extension(builder.name, body.text)
+    load_extension(glo, builder, link)
     
     return Response(status_code=status.HTTP_200_OK)
 
@@ -176,7 +178,9 @@ def get_api_create_procedure(name: str):
     if len(desc) != 0:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     
-    create_procedure(glo, name, None)
+    builder = read_procedure(DEFAULT_PROCEDURE_TEXT).compile(name)
+    link = write_procedure(name, DEFAULT_PROCEDURE_TEXT)
+    load_procedure(glo, builder, link)
     
     return Response(status_code=status.HTTP_200_OK)
 
@@ -187,7 +191,9 @@ def get_api_create_extension(name: str):
     if len(desc) != 0:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     
-    create_extension(glo, name, None)
+    builder = read_extension(DEFAULT_EXTENSION_TEXT).compile(name)
+    link = write_extension(name, DEFAULT_EXTENSION_TEXT)
+    load_extension(glo, builder, link)
     
     return Response(status_code=status.HTTP_200_OK)
 

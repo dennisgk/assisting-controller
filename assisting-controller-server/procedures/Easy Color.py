@@ -14,7 +14,7 @@ if os.name == "nt":
         def fill(*args):
             pass
         def Color(*args):
-            pass
+            return 5
         def setPixelColor(*args):
             pass
         def show(*args):
@@ -51,7 +51,8 @@ def stop(state, ex):
     
     state["strip"].show()
 # LETTER LIGHTS AND PERIMETER LIGHTS ARE THE DOMAINS
-register_procedure("Easy Color", "Easy", ["LL", "PL"])
+register_meta("Easy", ["LL", "PL"])
+register_ex("Test Ex")
 register_color_arg("Color arg", 255, 255, 255)
 register_select_arg("Select arg", ["Coors", "Busch"], "Coors")
 register_start(start)

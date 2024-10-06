@@ -9,9 +9,8 @@ if TYPE_CHECKING:
 EX_RUN_DOWNTIME = "EX_RUN_DOWNTIME"
 EX_RUN_SUSPEND = "EX_RUN_SUSPEND"
 
-def get_default_extension_text(name: str):
-    return \
-f"""# set_state AND set_run MUST BE CALLED
+DEFAULT_EXTENSION_TEXT = \
+"""# set_state AND set_run MUST BE CALLED
 def start(set_state, set_run):
     pass
 
@@ -22,7 +21,6 @@ def loop(state, set_run):
 def stop(state):
     pass
 
-register_ex("{name}")
 register_start(start)
 register_loop(loop)
 register_stop(stop)
@@ -51,9 +49,6 @@ class LightsExtensionBuilder:
         self.start_fn = None
         self.loop_fn = None
         self.stop_fn = None
-    
-    def register_ex(self, name):
-        self.name = name
 
     def register_start(self, start_fn):
         self.start_fn = start_fn
@@ -64,7 +59,9 @@ class LightsExtensionBuilder:
     def register_stop(self, stop_fn):
         self.stop_fn = stop_fn
 
-    def compile(self):
+    def compile(self, name):
+        self.name = name
+
         if self.name == None or self.start_fn == None or self.loop_fn == None or self.stop_fn == None:
             raise RuntimeError()
         
@@ -88,8 +85,8 @@ def start_extensions(glo: "LightsGlobalState", proc: "LightsProcedure"):
         def ex_set_run(*args):
             ex_run.extend(args)
 
-        out_ex = LightsRunningExtension(ex, out_state.var)
         ex.start_fn(ex_set_state, ex_set_run)
+        out_ex = LightsRunningExtension(ex, out_state.var)
         glo.running_ex.append(out_ex)
 
         if len(ex_run) > 0:
@@ -109,10 +106,10 @@ def flush_extensions(glo: "LightsGlobalState"):
         act.ex.stop_fn(act.state)
         glo.running_ex.remove(act)
 
-def get_procedure_extensions(glo: "LightsGlobalState", act_proc: "LightsRunningProcedure"):
+def get_procedure_extensions(glo: "LightsGlobalState", proc: "LightsProcedure"):
     ret = {}
 
-    for act in [act for act in glo.running_ex if act.ex.name in act_proc.proc.ex]:
+    for act in [act for act in glo.running_ex if act.ex.name in proc.ex]:
         ret[act.ex.name] = act.state
 
     return ret
@@ -122,17 +119,16 @@ def delete_extension(glo: "LightsGlobalState", ex: LightsExtension):
 
     pathlib.Path.unlink(ex.link)
 
-def create_extension(glo: "LightsGlobalState", name: str, text: str | None):
+def write_extension(name: str, text: str):
     link = pathlib.Path(__file__).parent.joinpath("extensions").joinpath(f"{name}.py")
 
-    with open(link, "w") as stream:
-        if(text == None):
-            text = get_default_extension_text(name)
+    with open(link, "wb") as stream:
+        stream.write(text.encode("utf-8"))
 
-        stream.write(text)
-    
-    proc = read_extension(text).build(link)
+    return link
 
+def load_extension(glo: "LightsGlobalState", builder: LightsExtensionBuilder, link: pathlib.Path):
+    proc = builder.build(link)
     glo.extensions.append(proc)
 
 def read_extension(text: str):
@@ -140,7 +136,6 @@ def read_extension(text: str):
 
     def scope_exec():
         exec(text, {
-            "register_ex": builder.register_ex,
             "register_start": builder.register_start,
             "register_loop": builder.register_loop,
             "register_stop": builder.register_stop,
@@ -150,7 +145,7 @@ def read_extension(text: str):
 
     scope_exec()
 
-    return builder.compile()
+    return builder
 
 def init_extensions() -> list[LightsExtension]:
     files = pathlib.Path(__file__).parent.joinpath("extensions").glob("*.py")
@@ -165,7 +160,7 @@ def init_extensions() -> list[LightsExtension]:
             file_text = stream.read()
 
         try:
-            ex = read_extension(file_text).build(file)
+            ex = read_extension(file_text).compile(file.stem).build(file)
             out.append(ex)
             print(f"Loaded Extension: {ex.name}")
         except Exception as e:
