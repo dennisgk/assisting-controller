@@ -239,6 +239,15 @@ def get_api_admin_restart():
     
     return Response(status_code=status.HTTP_200_OK)
 
+@app.get("/api/admin_shutdown", response_class=Response)
+def get_api_admin_shutdown():
+    if os.name == "nt":
+        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
+    
+    os.system("shutdown now")
+    
+    return Response(status_code=status.HTTP_200_OK)
+
 if __name__ == "__main__":
     if os.name != "nt":
         ip = "unknown"
