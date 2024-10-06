@@ -14,10 +14,6 @@ from procedure_handler import start_procedure, stop_procedure, delete_procedure,
 from extension_handler import delete_extension, write_extension, load_extension, read_extension, DEFAULT_EXTENSION_TEXT
 import os
 
-if os.name != "nt":
-    import time
-    time.sleep(10)
-
 app = FastAPI()
 glo = LightsGlobalState()
 
