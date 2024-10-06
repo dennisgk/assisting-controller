@@ -5,6 +5,7 @@ from fastapi.encoders import jsonable_encoder
 import uvicorn
 import pathlib
 import traceback
+from config import admin_logs, admin_update
 
 import uvicorn.config
 from lights_global_state import LightsGlobalState
@@ -67,7 +68,11 @@ def get_api_get_running():
 
 @app.get("/api/get_admin", response_class=JSONResponse)
 def get_api_get_admin():
-    return JSONResponse(content=jsonable_encoder(obj=[SchemaButton(text="Reboot", on_click_body="async function restart(){await fetch(\"/api/admin_restart\");};window.AC_QUEUE(restart);", confirm_nullable="Are you sure you want to reboot?"), SchemaButton(text="Shutdown", on_click_body="async function shutdown(){await fetch(\"/api/admin_shutdown\");};window.AC_QUEUE(shutdown);", confirm_nullable="Are you sure you want to shutdown?")]))
+    return JSONResponse(content=jsonable_encoder(obj=[ \
+        SchemaButton(text="Logs", on_click_body="window.open(\"/api/admin_logs\", \"_blank\").focus();", confirm_nullable=None), 
+        SchemaButton(text="Update", on_click_body="async function update(){await fetch(\"/api/admin_update\");};window.AC_QUEUE(update);", confirm_nullable="Are you sure you want to update?"), 
+        SchemaButton(text="Reboot", on_click_body="async function restart(){await fetch(\"/api/admin_restart\");};window.AC_QUEUE(restart);", confirm_nullable="Are you sure you want to reboot?"), 
+        SchemaButton(text="Shutdown", on_click_body="async function shutdown(){await fetch(\"/api/admin_shutdown\");};window.AC_QUEUE(shutdown);", confirm_nullable="Are you sure you want to shutdown?")]))
 
 @app.get("/api/get_extension_text", response_class=PlainTextResponse)
 def get_api_get_extension_text(name: str):
@@ -248,7 +253,27 @@ def get_api_admin_shutdown():
     
     return Response(status_code=status.HTTP_200_OK)
 
+@app.get("/api/admin_update", response_class=Response)
+def get_api_admin_update():
+    if os.name == "nt":
+        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    admin_update()
+
+    return Response(status_code=status.HTTP_200_OK)
+
+@app.get("/api/admin_logs", response_class=PlainTextResponse)
+def get_api_admin_logs():
+    if os.name == "nt":
+        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
+    
+    text = admin_logs()
+
+    return PlainTextResponse(content=text)
+
 if __name__ == "__main__":
+    print("Version 1.0.0")
+
     if os.name != "nt":
         ip = "unknown"
 

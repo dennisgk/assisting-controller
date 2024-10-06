@@ -117,7 +117,7 @@ def get_procedure_extensions(glo: "LightsGlobalState", proc: "LightsProcedure"):
 def delete_extension(glo: "LightsGlobalState", ex: LightsExtension):
     glo.extensions.remove(ex)
 
-    pathlib.Path.unlink(ex.link)
+    ex.link.unlink()
 
 def write_extension(name: str, text: str):
     link = pathlib.Path(__file__).parent.joinpath("extensions").joinpath(f"{name}.py")

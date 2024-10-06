@@ -148,7 +148,7 @@ def start_procedure(glo: "LightsGlobalState", proc: LightsProcedure, args: list[
 def delete_procedure(glo: "LightsGlobalState", proc: LightsProcedure):
     glo.procedures.remove(proc)
 
-    pathlib.Path.unlink(proc.link)
+    proc.link.unlink()
 
 def write_procedure(name: str, text: str):
     link = pathlib.Path(__file__).parent.joinpath("procedures").joinpath(f"{name}.py")
