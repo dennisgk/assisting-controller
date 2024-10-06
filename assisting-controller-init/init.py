@@ -6,4 +6,5 @@ if os.name != "nt":
     if link.is_file():
         link.unlink()
         os.system("git -C /home/pi/Desktop/assisting-controller pull")
-        os.system("python3.12 /home/pi/Desktop/assisting-controller/assisting-controller-server/main.py")
+    
+    os.system("python3.12 /home/pi/Desktop/assisting-controller/assisting-controller-server/main.py")
