@@ -1,5 +1,5 @@
 import pathlib
-from schema import VariableWrapper
+from schema import VariableWrapper, FunctionWrapper
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -77,6 +77,7 @@ def start_extensions(glo: "LightsGlobalState", proc: "LightsProcedure"):
             continue
         
         out_state = VariableWrapper(None)
+        out_suspend_fn = VariableWrapper(None)
         ex_run = []
 
         def ex_set_state(state):
@@ -84,6 +85,9 @@ def start_extensions(glo: "LightsGlobalState", proc: "LightsProcedure"):
         
         def ex_set_run(*args):
             ex_run.extend(args)
+            if args[0] == EX_RUN_SUSPEND:
+                out_suspend_fn.var = FunctionWrapper()
+                return out_suspend_fn.var
 
         ex.start_fn(ex_set_state, ex_set_run)
         out_ex = LightsRunningExtension(ex, out_state.var)
@@ -94,7 +98,10 @@ def start_extensions(glo: "LightsGlobalState", proc: "LightsProcedure"):
                 glo.loop.set_downtime(LightsExtensionLoopEvent(out_ex), ex_run[1])
 
             if(ex_run[0] == EX_RUN_SUSPEND):
-                pass
+                def unsuspend_ex(time_arg):
+                    glo.loop.set_downtime(LightsExtensionLoopEvent(out_ex), time_arg)
+                
+                out_suspend_fn.var.set_fn(unsuspend_ex)
 
 def flush_extensions(glo: "LightsGlobalState"):
     needed_ex = list(set(sum([act.proc.ex for act in glo.running_proc], [])))

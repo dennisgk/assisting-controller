@@ -80,6 +80,10 @@ class SyncWaiter():
         self.var_event.clear()
 
     def set_downtime(self, v, millis):
+        if(millis <= 0):
+            self.set(v)
+            return
+
         if(self.has_quit()):
             return
         

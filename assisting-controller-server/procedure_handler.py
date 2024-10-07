@@ -1,6 +1,6 @@
 import pathlib
 from extension_handler import start_extensions, flush_extensions, get_procedure_extensions
-from schema import LightsProcedureColorArg, SchemaStartProcedureSelectArg, SchemaStartProcedureColorArg, LightsProcedureColorArgDefault, LightsProcedureSelectArg, get_lights_procedure_color_arg_type, get_lights_procedure_select_arg_type, SchemaButton, VariableWrapper
+from schema import LightsProcedureColorArg, SchemaStartProcedureSelectArg, SchemaStartProcedureColorArg, LightsProcedureColorArgDefault, LightsProcedureSelectArg, get_lights_procedure_color_arg_type, get_lights_procedure_select_arg_type, SchemaButton, VariableWrapper, FunctionWrapper
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -119,6 +119,7 @@ def start_procedure(glo: "LightsGlobalState", proc: LightsProcedure, args: list[
     proc_run = []
     proc_buttons = []
     out_state = VariableWrapper(None)
+    out_suspend_fn = VariableWrapper(None)
 
     def proc_register_button(text, on_click_body, confirm_nullable):
         proc_buttons.append(SchemaButton(text=text, on_click_body=on_click_body, confirm_nullable=confirm_nullable))
@@ -128,6 +129,9 @@ def start_procedure(glo: "LightsGlobalState", proc: LightsProcedure, args: list[
     
     def proc_set_run(*args):
         proc_run.extend(args)
+        if args[0] == PROC_RUN_SUSPEND:
+            out_suspend_fn.var = FunctionWrapper()
+            return out_suspend_fn.var
     
     proc.start_fn(proc_set_state, proc_set_run, proc_register_button, args, get_procedure_extensions(glo, proc))
     out_proc = LightsRunningProcedure(proc, out_state.var, proc_buttons)
@@ -143,6 +147,11 @@ def start_procedure(glo: "LightsGlobalState", proc: LightsProcedure, args: list[
             return
 
         if(proc_run[0] == PROC_RUN_SUSPEND):
+            def unsuspend_proc(time_arg):
+                glo.loop.set_downtime(LightsProcedureLoopEvent(out_proc), time_arg)
+            
+            out_suspend_fn.var.set_fn(unsuspend_proc)
+
             return
         
 def delete_procedure(glo: "LightsGlobalState", proc: LightsProcedure):

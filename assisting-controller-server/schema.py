@@ -1,3 +1,4 @@
+from typing import Any
 from pydantic import BaseModel
 
 class SchemaExtension(BaseModel):
@@ -59,3 +60,22 @@ class SchemaEdit(BaseModel):
 class VariableWrapper():
     def __init__(self, var):
         self.var = var
+
+class FunctionWrapper():
+    def __init__(self):
+        self._fn = None
+        self.waiting = []
+
+    def set_fn(self, fn):
+        self._fn = fn
+
+        for x in range(0, len(self.waiting)):
+            self(self.waiting[x])
+        
+        self.waiting = []
+
+    def __call__(self, arg):
+        if self._fn == None:
+            self.waiting.append(arg)
+        else:
+            return self._fn(arg)
