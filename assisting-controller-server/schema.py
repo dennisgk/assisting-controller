@@ -66,8 +66,13 @@ class FunctionWrapper():
         self._fn = None
         self.waiting = []
 
-    def set_fn(self, fn):
-        self._fn = fn
+    @property
+    def fn(self):
+        return self._fn
+
+    @fn.setter
+    def fn(self, val):
+        self._fn = val
 
         for x in range(0, len(self.waiting)):
             self(self.waiting[x])
@@ -75,7 +80,7 @@ class FunctionWrapper():
         self.waiting = []
 
     def __call__(self, arg):
-        if self._fn == None:
+        if self.fn == None:
             self.waiting.append(arg)
         else:
-            return self._fn(arg)
+            return self.fn(arg)

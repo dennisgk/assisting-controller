@@ -150,7 +150,7 @@ def start_procedure(glo: "LightsGlobalState", proc: LightsProcedure, args: list[
             def unsuspend_proc(time_arg):
                 glo.loop.set_downtime(LightsProcedureLoopEvent(out_proc), time_arg)
             
-            out_suspend_fn.var.set_fn(unsuspend_proc)
+            out_suspend_fn.var.fn = unsuspend_proc
 
             return
         

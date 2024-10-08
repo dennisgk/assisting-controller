@@ -52,7 +52,7 @@ class LightsGlobalState:
                     def unsuspend_proc(time_arg):
                         self.loop.set_downtime(LightsProcedureLoopEvent(ev.act_proc), time_arg)
                     
-                    out_suspend_fn.var.set_fn(unsuspend_proc)
+                    out_suspend_fn.var.fn = unsuspend_proc
 
                     return
 
@@ -79,8 +79,8 @@ class LightsGlobalState:
                     def unsuspend_ex(time_arg):
                         self.loop.set_downtime(LightsExtensionLoopEvent(ev.act_ex), time_arg)
                     
-                    out_suspend_fn.var.set_fn(unsuspend_ex)
-                    
+                    out_suspend_fn.var.fn = unsuspend_ex
+
                     return
                 
             return

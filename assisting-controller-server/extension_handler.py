@@ -101,7 +101,7 @@ def start_extensions(glo: "LightsGlobalState", proc: "LightsProcedure"):
                 def unsuspend_ex(time_arg):
                     glo.loop.set_downtime(LightsExtensionLoopEvent(out_ex), time_arg)
                 
-                out_suspend_fn.var.set_fn(unsuspend_ex)
+                out_suspend_fn.var.fn = unsuspend_ex
 
 def flush_extensions(glo: "LightsGlobalState"):
     needed_ex = list(set(sum([act.proc.ex for act in glo.running_proc], [])))
