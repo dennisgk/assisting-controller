@@ -1,42 +1,28 @@
 import pathlib
-from schema import VariableWrapper, FunctionWrapper
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from procedure_handler import LightsRunningProcedure, LightsProcedure
+    from procedure_handler import LightsProcedure
     from lights_global_state import LightsGlobalState
 
-EX_RUN_DOWNTIME = "EX_RUN_DOWNTIME"
-EX_RUN_SUSPEND = "EX_RUN_SUSPEND"
-
 DEFAULT_EXTENSION_TEXT = \
-"""# set_state AND set_run MUST BE CALLED
-def start(set_state, set_run):
-    pass
-
-# set_run MUST BE CALLED
-def loop(state, set_run):
-    pass
+"""# STATE MUST BE RETURNED
+def start():
+    return None
     
 def stop(state):
     pass
 
 register_start(start)
-register_loop(loop)
 register_stop(stop)
 """
 
 class LightsExtension:
-    def __init__(self, name, start_fn, loop_fn, stop_fn, link):
+    def __init__(self, name, start_fn, stop_fn, link):
         self.name = name
         self.start_fn = start_fn
-        self.loop_fn = loop_fn
         self.stop_fn = stop_fn
         self.link = link
-
-class LightsExtensionLoopEvent:
-    def __init__(self, act_ex):
-        self.act_ex = act_ex
 
 class LightsRunningExtension:
     def __init__(self, ex, state):
@@ -47,14 +33,10 @@ class LightsExtensionBuilder:
     def __init__(self):
         self.name = None
         self.start_fn = None
-        self.loop_fn = None
         self.stop_fn = None
 
     def register_start(self, start_fn):
         self.start_fn = start_fn
-
-    def register_loop(self, loop_fn):
-        self.loop_fn = loop_fn
 
     def register_stop(self, stop_fn):
         self.stop_fn = stop_fn
@@ -62,13 +44,13 @@ class LightsExtensionBuilder:
     def compile(self, name):
         self.name = name
 
-        if self.name == None or self.start_fn == None or self.loop_fn == None or self.stop_fn == None:
+        if self.name == None or self.start_fn == None or self.stop_fn == None:
             raise RuntimeError()
         
         return self
     
     def build(self, link):
-        ex = LightsExtension(self.name, self.start_fn, self.loop_fn, self.stop_fn, link)
+        ex = LightsExtension(self.name, self.start_fn, self.stop_fn, link)
         return ex
     
 def start_extensions(glo: "LightsGlobalState", proc: "LightsProcedure"):
@@ -76,40 +58,14 @@ def start_extensions(glo: "LightsGlobalState", proc: "LightsProcedure"):
         if(ex in [act.ex for act in glo.running_ex]):
             continue
         
-        out_state = VariableWrapper(None)
-        out_suspend_fn = VariableWrapper(None)
-        ex_run = []
-
-        def ex_set_state(state):
-            out_state.var = state
-        
-        def ex_set_run(*args):
-            ex_run.extend(args)
-            if args[0] == EX_RUN_SUSPEND:
-                out_suspend_fn.var = FunctionWrapper()
-                return out_suspend_fn.var
-
-        ex.start_fn(ex_set_state, ex_set_run)
-        out_ex = LightsRunningExtension(ex, out_state.var)
+        out_state = ex.start_fn()
+        out_ex = LightsRunningExtension(ex, out_state)
         glo.running_ex.append(out_ex)
-
-        if len(ex_run) > 0:
-            if(ex_run[0] == EX_RUN_DOWNTIME):
-                glo.loop.set_downtime(LightsExtensionLoopEvent(out_ex), ex_run[1])
-
-            if(ex_run[0] == EX_RUN_SUSPEND):
-                def unsuspend_ex(time_arg):
-                    glo.loop.set_downtime(LightsExtensionLoopEvent(out_ex), time_arg)
-                
-                out_suspend_fn.var.fn = unsuspend_ex
 
 def flush_extensions(glo: "LightsGlobalState"):
     needed_ex = list(set(sum([act.proc.ex for act in glo.running_proc], [])))
 
     for act in [act for act in glo.running_ex if act.ex.name not in needed_ex]:
-        
-        glo.loop.remove_where(lambda x: isinstance(x, LightsExtensionLoopEvent) and x.act_ex == act)
-
         act.ex.stop_fn(act.state)
         glo.running_ex.remove(act)
 
@@ -144,10 +100,7 @@ def read_extension(text: str):
     def scope_exec():
         exec(text, {
             "register_start": builder.register_start,
-            "register_loop": builder.register_loop,
             "register_stop": builder.register_stop,
-            "EX_RUN_DOWNTIME": EX_RUN_DOWNTIME,
-            "EX_RUN_SUSPEND": EX_RUN_SUSPEND,
         })
 
     scope_exec()

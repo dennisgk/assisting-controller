@@ -5,7 +5,6 @@ from fastapi.encoders import jsonable_encoder
 import uvicorn
 import pathlib
 import traceback
-from config import admin_logs, admin_update
 
 import uvicorn.config
 from lights_global_state import LightsGlobalState
@@ -233,60 +232,23 @@ def get_api_delete_extension(name: str):
 
 @app.get("/api/admin_restart", response_class=Response)
 def get_api_admin_restart():
-    if os.name == "nt":
-        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
-    
-    os.system("reboot now")
-    
-    return Response(status_code=status.HTTP_200_OK)
+    return glo.interop.admin_restart()
 
 @app.get("/api/admin_shutdown", response_class=Response)
 def get_api_admin_shutdown():
-    if os.name == "nt":
-        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
-    
-    os.system("shutdown now")
-    
-    return Response(status_code=status.HTTP_200_OK)
+    return glo.interop.admin_shutdown()
 
 @app.get("/api/admin_update", response_class=Response)
 def get_api_admin_update():
-    if os.name == "nt":
-        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    admin_update()
-
-    return Response(status_code=status.HTTP_200_OK)
+    return glo.interop.admin_update()
 
 @app.get("/api/admin_logs", response_class=PlainTextResponse)
 def get_api_admin_logs():
-    if os.name == "nt":
-        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
-    
-    text = admin_logs()
-
-    return PlainTextResponse(content=text)
+    return glo.interop.admin_logs()
 
 if __name__ == "__main__":
-    print("Version 1.0.2")
+    print("Version 1.0.3")
 
-    if os.name != "nt":
-        ip = "unknown"
-
-        try:
-            import netifaces as ni
-            ip = ni.ifaddresses("wlan0")[ni.AF_INET][0]["addr"]
-        except:
-            pass
-
-        try:
-            from RPLCD.i2c import CharLCD
-            lcd = CharLCD(i2c_expander="PCF8574", address=0x27, port=1, cols=16, rows=2, dotsize=8)
-            lcd.clear()
-
-            lcd.write_string(ip)
-        except:
-            pass
+    glo.interop.on_start()
 
     uvicorn.run(app, host="0.0.0.0", port=80)
-    glo.loop.quit()

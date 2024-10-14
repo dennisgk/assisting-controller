@@ -1,5 +1,6 @@
 from typing import Any
 from pydantic import BaseModel
+import pathlib
 
 class SchemaExtension(BaseModel):
     name: str
@@ -61,26 +62,46 @@ class VariableWrapper():
     def __init__(self, var):
         self.var = var
 
-class FunctionWrapper():
+class SchemaInterop():
     def __init__(self):
-        self._fn = None
-        self.waiting = []
+        self.admin_restart = None
+        self.admin_shutdown = None
+        self.admin_update = None
+        self.admin_logs = None
+        self.on_start = None
+    
+    def register_admin_restart(self, fn):
+        self.admin_restart = fn
+    
+    def register_admin_shutdown(self, fn):
+        self.admin_shutdown = fn
+    
+    def register_admin_update(self, fn):
+        self.admin_update = fn
+    
+    def register_admin_logs(self, fn):
+        self.admin_logs = fn
+    
+    def register_on_start(self, fn):
+        self.on_start = fn
 
-    @property
-    def fn(self):
-        return self._fn
+def init_interop():
+    file = pathlib.Path(__file__).parent.parent.joinpath("assisting-controller-init").joinpath("config.py")
+    
+    with open(file, "r") as stream:
+        text = stream.read()
 
-    @fn.setter
-    def fn(self, val):
-        self._fn = val
+    builder = SchemaInterop()
 
-        for x in range(0, len(self.waiting)):
-            self(self.waiting[x])
-        
-        self.waiting = []
+    def scope_exec():
+        exec(text, {
+            "register_admin_restart": builder.register_admin_restart,
+            "register_admin_shutdown": builder.register_admin_shutdown,
+            "register_admin_update": builder.register_admin_update,
+            "register_admin_logs": builder.register_admin_logs,
+            "register_on_start": builder.register_on_start,
+        })
 
-    def __call__(self, arg):
-        if self.fn == None:
-            self.waiting.append(arg)
-        else:
-            return self.fn(arg)
+    scope_exec()
+
+    return builder
