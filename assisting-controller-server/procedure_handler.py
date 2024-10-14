@@ -11,7 +11,7 @@ DEFAULT_PROCEDURE_TEXT = \
 def start(internal_exit, register_button, args, ex):
     return None
 
-def stop(state, ex):
+def stop(state):
     pass
 
 register_meta("DESCRIPTION", ["DOMAIN 1", "DOMAIN 2", "DOMAIN 3..."])
@@ -81,7 +81,7 @@ class LightsProcedureBuilder:
         return proc
 
 def stop_procedure(glo: "LightsGlobalState", act_proc: LightsRunningProcedure):
-    act_proc.proc.stop_fn(act_proc.state, get_procedure_extensions(glo, act_proc.proc))
+    act_proc.proc.stop_fn(act_proc.state)
 
     glo.running_proc.remove(act_proc)
     flush_extensions(glo)
