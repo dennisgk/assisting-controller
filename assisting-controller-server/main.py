@@ -21,6 +21,9 @@ app.mount("/assets", StaticFiles(directory=pathlib.Path(__file__).parent.parent.
 def index():
     return FileResponse(path=pathlib.Path(__file__).parent.parent.joinpath("assisting-controller-react").joinpath("dist").joinpath("index.html").resolve())
 
+def init_parent_folder():
+    return pathlib.Path(__file__).parent.parent.joinpath("assisting-controller-init").resolve()
+
 @app.get("/", response_class=FileResponse)
 def get():
     return index()
@@ -232,32 +235,23 @@ def get_api_delete_extension(name: str):
 
 @app.get("/api/admin_restart", response_class=Response)
 def get_api_admin_restart():
-    return glo.interop.admin_restart()
+    return glo.interop.admin_restart(init_parent_folder())
 
 @app.get("/api/admin_shutdown", response_class=Response)
 def get_api_admin_shutdown():
-    return glo.interop.admin_shutdown()
+    return glo.interop.admin_shutdown(init_parent_folder())
 
 @app.get("/api/admin_update", response_class=Response)
 def get_api_admin_update():
-    return glo.interop.admin_update()
+    return glo.interop.admin_update(init_parent_folder())
 
 @app.get("/api/admin_logs", response_class=PlainTextResponse)
 def get_api_admin_logs():
-    try:
-        return glo.interop.admin_logs()
-    except:
-        if os.name == "nt":
-            raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
-        
-        with open(pathlib.Path(__file__).parent.parent.parent.joinpath("logs").joinpath("cronlog"), "r") as stream:
-            text = stream.read()
-
-        return PlainTextResponse(content=text)
+    return glo.interop.admin_logs(init_parent_folder())
 
 if __name__ == "__main__":
     print("Version 1.0.3")
 
-    glo.interop.on_start()
+    glo.interop.on_start(init_parent_folder())
 
     uvicorn.run(app, host="0.0.0.0", port=80)

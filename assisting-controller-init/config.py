@@ -4,27 +4,26 @@ import pathlib
 from fastapi import HTTPException, status
 from fastapi.responses import PlainTextResponse, Response
 
-
-def admin_update():
+def admin_update(parent_folder):
     if os.name == "nt":
         raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    with open(pathlib.Path(__file__).parent.joinpath("update.txt").resolve(), "wb") as stream:
+    with open(parent_folder.joinpath("update.txt").resolve(), "wb") as stream:
         stream.write("update".encode("utf-8"))
     os.system("reboot now")
 
     return Response(status_code=status.HTTP_200_OK)
 
-def admin_logs():
+def admin_logs(parent_folder):
     if os.name == "nt":
         raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
     
-    with open(pathlib.Path(__file__).parent.parent.parent.joinpath("logs").joinpath("cronlog"), "r") as stream:
+    with open(parent_folder.parent.parent.joinpath("logs").joinpath("cronlog"), "r") as stream:
         text = stream.read()
 
     return PlainTextResponse(content=text)
 
-def admin_restart():
+def admin_restart(parent_folder):
     if os.name == "nt":
         raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
     
@@ -32,7 +31,7 @@ def admin_restart():
     
     return Response(status_code=status.HTTP_200_OK)
 
-def admin_shutdown():
+def admin_shutdown(parent_folder):
     if os.name == "nt":
         raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
     
@@ -40,7 +39,7 @@ def admin_shutdown():
     
     return Response(status_code=status.HTTP_200_OK)
 
-def on_start():
+def on_start(parent_folder):
     if os.name != "nt":
         ip = "unknown"
 
