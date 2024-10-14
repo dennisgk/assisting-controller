@@ -111,7 +111,11 @@ def start_procedure(glo: "LightsGlobalState", proc: LightsProcedure, args: list[
         
         premature_exit.var = True
 
-    out_state = proc.start_fn(proc_internal_exit, proc_register_button, args, get_procedure_extensions(glo, proc))
+    aff_args = {}
+    for arg in args:
+        aff_args[arg.text] = arg.value
+
+    out_state = proc.start_fn(proc_internal_exit, proc_register_button, aff_args, get_procedure_extensions(glo, proc))
     out_proc.var = LightsRunningProcedure(proc, out_state, proc_buttons)
 
     glo.running_proc.append(out_proc.var)
