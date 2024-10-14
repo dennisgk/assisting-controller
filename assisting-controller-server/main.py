@@ -244,7 +244,16 @@ def get_api_admin_update():
 
 @app.get("/api/admin_logs", response_class=PlainTextResponse)
 def get_api_admin_logs():
-    return glo.interop.admin_logs()
+    try:
+        return glo.interop.admin_logs()
+    except:
+        if os.name == "nt":
+            raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
+        
+        with open(pathlib.Path(__file__).parent.parent.parent.joinpath("logs").joinpath("cronlog"), "r") as stream:
+            text = stream.read()
+
+        return PlainTextResponse(content=text)
 
 if __name__ == "__main__":
     print("Version 1.0.3")
