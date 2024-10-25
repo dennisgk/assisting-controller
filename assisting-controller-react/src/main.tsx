@@ -6,7 +6,7 @@ import { utils, pages, deps } from "./meta";
 //C:\Users\DennisK\Desktop\Folders\Projects\assisting-controller\assisting-controller-react\node_modules\monaco-editor\min
 deps.monaco.loader.config({
   paths: {
-    vs: "/assets",
+    vs: window.location.origin + "/assets",
   },
 });
 
