@@ -1,4 +1,4 @@
-import Editor, { Monaco } from "@monaco-editor/react";
+import Editor, { Monaco, loader } from "@monaco-editor/react";
 import { utils } from "../meta";
 
 const use_theme = () => {
@@ -30,4 +30,4 @@ const use_theme = () => {
 };
 
 export type { Monaco };
-export { Editor, use_theme };
+export { Editor, use_theme, loader };
