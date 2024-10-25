@@ -1,5 +1,6 @@
 import os
 import pathlib
+import time
 
 from fastapi import HTTPException, status
 from fastapi.responses import PlainTextResponse, Response
@@ -42,6 +43,7 @@ def admin_shutdown(parent_folder):
 def on_start(parent_folder):
     if os.name != "nt":
         os.system("systemctl start NetworkManager")
+        time.sleep(5)
         os.system("nmcli con up Hotspot")
 
         ip = "unknown"
