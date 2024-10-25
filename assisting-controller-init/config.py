@@ -41,6 +41,10 @@ def admin_shutdown(parent_folder):
 
 def on_start(parent_folder):
     if os.name != "nt":
+        os.system("systemctl start NetworkManager")
+        os.system("nmcli device wifi hotspot ssid \"Assisting Controller\" password assistinghand1856 ifname wlan0")
+
+
         ip = "unknown"
 
         try:
