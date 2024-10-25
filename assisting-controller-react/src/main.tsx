@@ -5,7 +5,7 @@ import { utils, pages, deps } from "./meta";
 //https://cdn.jsdelivr.net/npm/monaco-editor@0.43.0/min/vs/loader.js
 deps.monaco.loader.config({
   paths: {
-    vs: "/assets/loader.js",
+    vs: "/assets",
   },
 });
 
